@@ -1,0 +1,70 @@
+<!-- index.html -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Socket Example</title>
+</head>
+<body>
+  <button onclick="myFunction()">current-number</button>
+  <h2>Socket client</h2>
+  <ul id="mesage"></ul>
+  <hr>
+  <form action="" id="form">
+    <input type="text" id="input">
+    <button>send message</button>
+  </form>
+
+  <!-- Include Socket.IO from a CDN -->
+  <script src="https://cdn.socket.io/4.7.2/socket.io.min.js">
+    
+  </script>
+    <!-- Your client-side JavaScript -->
+  <script>
+
+    let input = document.getElementById('input');
+    let form = document.getElementById('form');
+
+    
+    // Connect to the server
+    const socket = io();
+
+    console.log(socket);
+
+    // Handle server events
+    /* socket.on('queueUpdate', (updatedQueueData) => {
+      // Update the client UI with the latest queue information
+    }); */
+    function myFunction(){
+    /* socket.emit('getTurnNumber', null);
+    socket.on('turnNumber', (msg) => {
+    console.log('current tour number: ' + msg);
+
+    socket.on('notification',msg=>{ console.log("message from server " + msg)})
+    });
+ */
+    
+   }
+
+    /* form.addEventListener('submit',function(e){
+      e.preventDefault();
+
+      if (input.value) {
+        socket.emit('chat message', input.value);
+        console.log('my mesage ' + input.value);
+        input.value = '';
+      }
+
+    }); */
+
+   /*  socket.on('chat message', function(msg) {
+    var item = document.createElement('li');
+    item.textContent = msg;
+    messages.appendChild(item);
+    window.scrollTo(0, document.body.scrollHeight);
+  }); */
+        
+  </script>
+</body>
+</html>
