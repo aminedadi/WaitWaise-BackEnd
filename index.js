@@ -2,14 +2,18 @@
 require('dotenv').config();
 const express = require('express');
 const bodyParser = require('body-parser');
-const cors = require('cors');
+const cors = require("cors");
 const app = express();
 const mysql = require('mysql');
 const jwt = require('jsonwebtoken');
 const router = express.Router();
 const port = 3000;
 
-app.use(cors());
+app.use(
+    cors({origin:"*"
+    })
+  );
+
 app.use(bodyParser.json());
 
 var cnx = mysql.createConnection({
@@ -27,7 +31,7 @@ var cnx = mysql.createConnection({
  
 
 //signup
-router.post('/api/signup', (req, res)=>{
+app.post('/api/signup', (req, res)=>{
     console.log(req.body);
     data = req.body;
     cnx.query(`select user_name from users Where user_name = '${data.user_name}';`, function (err, result) {
@@ -54,6 +58,7 @@ router.post('/api/signup', (req, res)=>{
             cnx.query(sql, function (err, result) {
                 if (err) throw err;
                 console.log("user signed seccesfully ");
+                res.send({success: true})
             });
         } 
     });
@@ -64,17 +69,17 @@ app.post('/api/login', (req, res) => {
     this.loginData = req.body;
     console.log('Received loginData:', this.loginData);
     
-    sql=`select user_name from users Where user_name = '${this.loginData.user_name}' and user_password = '${this.loginData.user_password}' and user_type = '${this.loginData.user_type}';`
+    sql=`select user_name, user_id from users Where user_name = '${this.loginData.user_name}' and user_password = '${this.loginData.user_password}' and user_type = '${this.loginData.user_type}';`
     console.log(sql);
-    cnx.query(sql, function (err, result) {
+    cnx.query(sql,[true], function (err, result) {
         if (err) throw err;
         if(result == ''){
             console.log("none")
             res.json({ success: false, message: 'Incorrect Username or password' });
         }else{ 
-            console.log("user : " + req.body.user_name);
-            user = {name : req.body.user_name, Role : req.body.user_type}
-            console.log("Result: " + JSON.stringify(result));
+
+            user = {name : req.body.user_name, Role : req.body.user_type, id: result[0].user_id}
+            console.log("Result: " + result[0]);
             accessToken = jwt.sign(user,process.env.ACCESS_TOKEN_SECRET);
             res.json({ success: true, message: 'user logd in successfuly', accessToken : accessToken });
             
@@ -83,10 +88,68 @@ app.post('/api/login', (req, res) => {
        
 });
 
+app.get('/get_companies',(request, result)=>{
+    sql=`select * from companies;`;
+    cnx.query(sql, function (err, res) {
+        if (err) throw err;
+        if(res == ''){
+            console.log("none")
+            result.send({ success: false, message: 'no company yet' });
+        }else{ 
+            console.log("Result: " + JSON.stringify(res));
+            result.send({ success: true, companiesList : res }); 
+        }  
+    });
+})
 
 
+app.post('/getCompanyId',(req, result)=>{
+    sql = `select company_id from companies where user_id = ${req.body.userId} `;
+    cnx.query(sql, function (err, res) {
+        if (err) throw err;
+        if(res == ''){
+            console.log("no company with this id")
+            result.send({ success: false, message: 'no company yet' });
+        }else{
+            //console.log("Result: " + JSON.stringify(res[0].company_id));
+            result.send({ success: true, company_id : res[0].company_id }); 
+        }  
+    });
+})
 
 
+app.post('/insert_queue',cors (),(req, result)=>{
+    sql=`INSERT INTO queues (queue_name, queue_type, queue_capacity, starting_time, ending_time, notification_type, company_id) VALUES('${req.body.queue_name}','${req.body.queue_type}','${req.body.queue_capacity}','${req.body.time_start}','${req.body.time_end}','${req.body.notification_type}','${req.body.company_id}');`;
+    console.log(' queue_name: '+ `${req.body.queue_name}` + ' queue_type: '+ `${req.body.queue_type}` + ' queue_capacity ' + `${req.body.queue_capacity}` +' starting_time: '+ `${req.body.time_start}`+' ending_time: '+ `${req.body.time_end}` +' notification_type: ' + `${req.body.notification_type}` +' company_id: ' + `${req.body.company_id}`);
+    cnx.query(sql, function (err, res) {
+        if (err) throw err;
+        if(res == ''){
+            console.log("none")
+            result.send({ success: false, message: 'no company yet' });
+        }else{ 
+            console.log("Result: " + JSON.stringify(res));
+            result.send({ success: true, companiesList : res }); 
+        }  
+    });
+  })
+  
+  app.get('/get_queues',cors (),async (req, result)=>{
+    sql=`select * from queues;`;
+    cnx.query(sql,[true], function (err, res) {
+        if (err) throw err;
+        if(res == ''){
+            result.send({ success: false, message: 'no queue yet' });
+        }else{ 
+            //console.log("Result: " + JSON.stringify(res));
+            result.json({ success: true, queuesList : res }); 
+        }  
+    });
+      //console.log("All Qs:", queues);
+      //console.log("All Qs:", queues[0].queue_name);
+      /* console.log("All Qs:", queues.map(a => (a.get({plain: true}))));*/
+     // res.send({quee : queues});
+  })
+  
 
 
 app.listen(port, () => {
